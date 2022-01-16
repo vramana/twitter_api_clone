@@ -1,0 +1,11 @@
+-- Your SQL goes here
+CREATE TABLE likes (
+  id BIGSERIAL PRIMARY KEY,
+  user_id BIGINT NOT NULL REFERENCES users,
+  tweet_id BIGINT NOT NULL REFERENCES tweets,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+
+SELECT diesel_manage_updated_at('likes');

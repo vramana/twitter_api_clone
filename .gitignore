@@ -1,0 +1,7 @@
+/target
+
+*.restclient
+
+todo.txt
+todo.org
+/.env
