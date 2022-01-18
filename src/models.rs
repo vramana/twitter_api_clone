@@ -4,7 +4,7 @@ pub mod users {
     use diesel::prelude::*;
     use diesel::{AsChangeset, Insertable, Queryable};
     use serde::{Deserialize, Serialize};
-    use tide::Request;
+    use tide::{Body, Request, Response};
 
     use crate::db::*;
     use crate::schema::users;
@@ -94,5 +94,52 @@ pub mod users {
             .map_err(|err| tide::Error::new(tide::StatusCode::InternalServerError, err))?;
 
         Ok(format!("Created a new user {}", &new_user_request.name).into())
+    }
+
+    #[derive(Debug, Serialize, Deserialize)]
+    struct UsersResponse {
+        pub users: Vec<UserResponse>,
+    }
+
+    #[derive(Debug, Serialize, Deserialize)]
+    struct UserResponse {
+        pub id: i64,
+        pub name: String,
+        pub username: String,
+        pub follower_count: i32,
+        pub following_count: i32,
+    }
+
+    impl From<User> for UserResponse {
+        fn from(c: User) -> Self {
+            Self {
+                id: c.id,
+                name: c.name,
+                username: c.username,
+                following_count: c.following_count,
+                follower_count: c.follower_count,
+            }
+        }
+    }
+
+    impl<T: Into<UserResponse>> From<Vec<T>> for UsersResponse {
+        fn from(v: Vec<T>) -> Self {
+            let users: Vec<UserResponse> = v.into_iter().map(|u| u.into()).collect();
+            Self { users }
+        }
+    }
+
+    pub async fn get_users(mut req: Request<Application>) -> tide::Result {
+        use crate::schema::users::dsl::*;
+        let db = &req.state().db;
+
+        let results: UsersResponse = users
+            .load::<User>(&db.conn())
+            .map_err(|err| tide::Error::new(tide::StatusCode::InternalServerError, err))?
+            .into();
+
+        Ok(Response::builder(200)
+            .body(Body::from_json(&results)?)
+            .build())
     }
 }

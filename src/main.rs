@@ -22,12 +22,6 @@ mod schema;
 use crate::db::*;
 use crate::models::*;
 
-#[derive(Debug, Deserialize)]
-struct Animal {
-    name: String,
-    legs: u8,
-}
-
 #[derive(Clone)]
 pub struct Application {
     pub db: Arc<PgDB>,
@@ -42,6 +36,7 @@ async fn main() -> tide::Result<()> {
     };
     let mut server = tide::with_state(app_state);
     server.at("/users").post(users::create_user);
+    server.at("/users").get(users::get_users);
     server.listen("127.0.0.1:8000").await?;
     Ok(())
 }
